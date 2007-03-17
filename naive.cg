@@ -1,0 +1,33 @@
+// Naive implementation of Knight's Tour.
+//
+// source cell:  s  (myself)
+// destination:  d  (neighbor)
+//
+//          tl     tr
+//
+//          [d][ ][d]
+//  lt   [d]   [ ]   [d]   rt
+//       [ ][ ][s][ ][ ]
+//  lb   [d]   [ ]   [d]   rb
+//          [d][ ][d]
+//
+//          bl     br
+//
+float4 main(
+  uniform sampler2D aBoard,
+  half2 iPos: TEX0
+) : COLOR
+{
+  static const half offset = 1.0 / 512.0;
+  float4 s   = tex2D(aBoard, iPos);
+  float4 tl  = tex2D(aBoard, iPos + half2(-offset, -offset*2));
+  float4 tr  = tex2D(aBoard, iPos + half2( offset, -offset*2));
+  float4 bl  = tex2D(aBoard, iPos + half2(-offset,  offset*2));
+  float4 br  = tex2D(aBoard, iPos + half2( offset,  offset*2));
+  float4 rt  = tex2D(aBoard, iPos + half2( offset*2, -offset));
+  float4 rb  = tex2D(aBoard, iPos + half2( offset*2,  offset));
+  float4 lt  = tex2D(aBoard, iPos + half2(-offset*2, -offset));
+  float4 lb  = tex2D(aBoard, iPos + half2(-offset*2,  offset));
+
+  return s;
+}
