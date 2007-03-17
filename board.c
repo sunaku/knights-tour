@@ -1,3 +1,5 @@
+#include "fbo.c"
+
 GLuint board__width;
 GLuint board__texture;
 GLuint board__display;
@@ -29,6 +31,9 @@ void board_init(const GLuint aWidth, const GLuint aKnightRow, const GLuint aKnig
   // Generate, set up, and bind the texture
     texture_new(&board__texture, board__width, board__width, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA32F_ARB, NULL);
 
+    // initialize the FBO
+    fbo_init(board__width, board__width);
+
     // Attach the texture to the framebuffer object
     glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_RECTANGLE_ARB, board__texture, 0);
 
@@ -40,6 +45,7 @@ void board_init(const GLuint aWidth, const GLuint aKnightRow, const GLuint aKnig
 }
 
 void board_fini() {
+  fbo_fini();
   glDeleteTextures(1, &board__display);
   glDeleteTextures(1, &board__texture);
   free(board__data);
