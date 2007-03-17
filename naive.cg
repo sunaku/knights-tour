@@ -1,29 +1,55 @@
 // Naive implementation of Knight's Tour.
 //
-// source cell:  s  (myself)
-// destination:  d  (neighbor)
-//
-//          tl     tr
-//
-//          [d][ ][d]
-//  lt   [d]   [ ]   [d]   rt
-//       [ ][ ][s][ ][ ]
-//  lb   [d]   [ ]   [d]   rb
-//          [d][ ][d]
-//
-//          bl     br
+//  cell.r = is knight present on this cell?
+//  cell.g =
+//  cell.b = Warnsdorff rank at this cell
+//  cell.a = the next move from this cell
 //
 float4 main(
   uniform samplerRECT aBoard,
   float2 iPos: WPOS
 ) : COLOR
 {
+  // binary encoding of moves to neighboring cells
+  //
+  //  the @ sign denotes the current cell
+  //  numbers denote the neighboring cells
+  //
+  //          tl     tr
+  //
+  //          [2][ ][0]
+  //  lt   [6]   [ ]   [4]   rt
+  //       [ ][ ][@][ ][ ]
+  //  lb   [7]   [ ]   [5]   rb
+  //          [3][ ][1]
+  //
+  //          bl     br
+  //
+  static const half // k i j   x   y  designation
+    MOVE_TR   = 0,  // 0 0 0   1   2  top right
+    MOVE_BR   = 1,  // 0 0 1   1  -2  bottom right
+    MOVE_TL   = 2,  // 0 1 0  -1   2  top left
+    MOVE_BL   = 3,  // 0 1 1  -1  -2  bottom left
+    MOVE_RT   = 4,  // 1 0 0   2   1  right top
+    MOVE_RB   = 5,  // 1 0 1   2  -1  right bottom
+    MOVE_LT   = 6,  // 1 1 0  -2   1  left top
+    MOVE_LB   = 7,  // 1 1 1  -2  -1  left bottom
+    MOVE_NONE = 8
+  ;
+
+  // rank can only be at most 8 (there are at most 8 neighbors per cell)
+  static const half RANK_NONE = 9;
+
+  // width of the chess board
   static const int WIDTH = 8;
+
 
   float4 self = texRECT(aBoard, iPos);
   int rank = 0;
+  float minRank = RANK_NONE;
+  float nextMove = MOVE_NONE;
 
-  // iterate through valid neighboring cells
+  // iterate through neighboring cells
     float2 itr = float2(1, 2);
 
     for (int k = 0; k < 2; k++) {
@@ -45,15 +71,20 @@ float4 main(
             // calculate Warnsdorff ranking
               if (cell.r == 0)
                 rank++;
+
+            // calculate knight's next move
+              if (cell.b < minRank) {
+                minRank = cell.b;
+                nextMove = (4 * k) + (2 * i) + j; // binary encoding (see MOVE_* constants above)
+              }
           }
         }
       }
 
-    // swap 1, 2 => 2, 1 to handle both cases: top & bottom, left & right
-    itr.xy = itr.yx;
-  }
+      itr.xy = itr.yx;
+    }
 
-  self.g = rank;
-  self.b = rank / 8.0;
+  self.b = rank;
+  self.a = nextMove;
   return self;
 }
