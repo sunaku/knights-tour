@@ -14,20 +14,45 @@
 //          bl     br
 //
 float4 main(
-  uniform sampler2D aBoard,
-  half2 iPos: TEX0
+  uniform samplerRECT aBoard,
+  half2 iPos: WPOS
 ) : COLOR
 {
-  static const half offset = 1.0 / 512.0;
-  float4 s   = tex2D(aBoard, iPos);
-  float4 tl  = tex2D(aBoard, iPos + half2(-offset, -offset*2));
-  float4 tr  = tex2D(aBoard, iPos + half2( offset, -offset*2));
-  float4 bl  = tex2D(aBoard, iPos + half2(-offset,  offset*2));
-  float4 br  = tex2D(aBoard, iPos + half2( offset,  offset*2));
-  float4 rt  = tex2D(aBoard, iPos + half2( offset*2, -offset));
-  float4 rb  = tex2D(aBoard, iPos + half2( offset*2,  offset));
-  float4 lt  = tex2D(aBoard, iPos + half2(-offset*2, -offset));
-  float4 lb  = tex2D(aBoard, iPos + half2(-offset*2,  offset));
+  // relative pixel offsets for neighboring cells
+  static const half2
+    POS_TL = half2(-1, -2),
+    POS_TR = half2( 1, -2),
+    POS_BL = half2(-1,  2),
+    POS_BR = half2( 1,  2),
+    POS_RT = half2( 2, -1),
+    POS_RB = half2( 2,  1),
+    POS_LT = half2(-2, -1),
+    POS_LB = half2(-2,  1)
+  ;
+
+  // encoding of neighboring positions as
+  // [0,1] clamped floating point numbers
+  static const half
+    MOVE_TL   = 0.8,
+    MOVE_TR   = 0.7,
+    MOVE_BL   = 0.6,
+    MOVE_BR   = 0.5,
+    MOVE_RT   = 0.4,
+    MOVE_RB   = 0.3,
+    MOVE_LT   = 0.2,
+    MOVE_LB   = 0.1,
+    MOVE_NONE = 0.0
+  ;
+
+  float4 s      = texRECT(aBoard, iPos);
+  float4 tl     = texRECT(aBoard, iPos + POS_TL);
+  float4 tr     = texRECT(aBoard, iPos + POS_TR);
+  float4 bl     = texRECT(aBoard, iPos + POS_BL);
+  float4 br     = texRECT(aBoard, iPos + POS_BR);
+  float4 rt     = texRECT(aBoard, iPos + POS_RT);
+  float4 rb     = texRECT(aBoard, iPos + POS_RB);
+  float4 lt     = texRECT(aBoard, iPos + POS_LT);
+  float4 lb     = texRECT(aBoard, iPos + POS_LB);
 
   return s;
 }

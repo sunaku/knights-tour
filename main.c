@@ -8,12 +8,14 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include "glew.c"
 #include "glut.c"
 #include "cg.c"
+#include "fbo.c"
 #include "texture.c"
 #include "board.c"
 
-#define SIZE 512
+#define SIZE 8
 
 void main_display(void)
 {
@@ -26,6 +28,9 @@ int main(int argc, char **argv)
   // set up
     glut_init(argc, argv, "Knight's Tour in Cg", SIZE, SIZE);
 
+    glew_init();
+    fbo_init(SIZE, SIZE);
+
     cg_init();
     cg_register_fragment_program("naive.cg", "main");
 
@@ -37,6 +42,8 @@ int main(int argc, char **argv)
   // tear down
     board_fini();
     cg_fini();
+    fbo_fini();
+    glew_fini();
 
   return 0;
 }
