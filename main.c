@@ -25,8 +25,7 @@ void main_display(void)
 int main(int argc, char **argv)
 {
   // set up
-    glut_init(argc, argv, "Knight's Tour in Cg", SIZE, SIZE);
-
+    glut_init(argc, argv, "Knight's Tour in Cg", 512, 512);
     glew_init();
 
     cg_init();
