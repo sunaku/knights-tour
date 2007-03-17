@@ -15,44 +15,45 @@
 //
 float4 main(
   uniform samplerRECT aBoard,
-  half2 iPos: WPOS
+  float2 iPos: WPOS
 ) : COLOR
 {
-  // relative pixel offsets for neighboring cells
-  static const half2
-    POS_TL = half2(-1, -2),
-    POS_TR = half2( 1, -2),
-    POS_BL = half2(-1,  2),
-    POS_BR = half2( 1,  2),
-    POS_RT = half2( 2, -1),
-    POS_RB = half2( 2,  1),
-    POS_LT = half2(-2, -1),
-    POS_LB = half2(-2,  1)
-  ;
+  static const int WIDTH = 8;
 
-  // encoding of neighboring positions as
-  // [0,1] clamped floating point numbers
-  static const half
-    MOVE_TL   = 0.8,
-    MOVE_TR   = 0.7,
-    MOVE_BL   = 0.6,
-    MOVE_BR   = 0.5,
-    MOVE_RT   = 0.4,
-    MOVE_RB   = 0.3,
-    MOVE_LT   = 0.2,
-    MOVE_LB   = 0.1,
-    MOVE_NONE = 0.0
-  ;
+  float4 self = texRECT(aBoard, iPos);
+  int rank = 0;
 
-  float4 s      = texRECT(aBoard, iPos);
-  float4 tl     = texRECT(aBoard, iPos + POS_TL);
-  float4 tr     = texRECT(aBoard, iPos + POS_TR);
-  float4 bl     = texRECT(aBoard, iPos + POS_BL);
-  float4 br     = texRECT(aBoard, iPos + POS_BR);
-  float4 rt     = texRECT(aBoard, iPos + POS_RT);
-  float4 rb     = texRECT(aBoard, iPos + POS_RB);
-  float4 lt     = texRECT(aBoard, iPos + POS_LT);
-  float4 lb     = texRECT(aBoard, iPos + POS_LB);
+  // iterate through valid neighboring cells
+    float2 itr = float2(1, 2);
 
-  return s;
+    for (int k = 0; k < 2; k++) {
+      for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+          // relative offset of neighboring cell
+          float2 offset = itr * float2(pow(-1, fixed(i)), pow(-1, fixed(j)));
+
+          // position of neighboring cell
+          float2 pos = iPos + offset;
+
+          // ignore out-of-bounds indices because texRECT() will clamp them to the border of the grid
+          if (
+            pos.x >= 0 && pos.x < WIDTH &&
+            pos.y >= 0 && pos.y < WIDTH
+          ){
+            float4 cell = texRECT(aBoard, pos);
+
+            // calculate Warnsdorff ranking
+              if (cell.r == 0)
+                rank++;
+          }
+        }
+      }
+
+    // swap 1, 2 => 2, 1 to handle both cases: top & bottom, left & right
+    itr.xy = itr.yx;
+  }
+
+  self.g = rank;
+  self.b = rank / 8.0;
+  return self;
 }
