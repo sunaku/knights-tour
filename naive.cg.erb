@@ -1,0 +1,112 @@
+// Naive implementation of Knight's Tour.
+//
+//  cell.r = is knight present on this cell?
+//  cell.g = knight's phase counter
+//  cell.b = Warnsdorff rank at this cell
+//  cell.a = the next move from this cell
+//
+float4 main(
+  uniform samplerRECT aBoard,
+  float2 iPos: WPOS
+) : COLOR
+{
+  <%
+    # binary encoding of moves to neighboring cells
+    #
+    #  the @ sign denotes the current cell
+    #  numbers denote the neighboring cells
+    #
+    #          tl     tr
+    #
+    #          [2][ ][0]
+    #  lt   [6]   [ ]   [4]   rt
+    #       [ ][ ][@][ ][ ]
+    #  lb   [7]   [ ]   [5]   rb
+    #          [3][ ][1]
+    #
+    #          bl     br
+    #
+    MOVE_NONE = 8   # k i j   x   y  designation
+    MOVE_TR   = 0   # 0 0 0   1   2  top right
+    MOVE_BR   = 1   # 0 0 1   1  -2  bottom right
+    MOVE_TL   = 2   # 0 1 0  -1   2  top left
+    MOVE_BL   = 3   # 0 1 1  -1  -2  bottom left
+    MOVE_RT   = 4   # 1 0 0   2   1  right top
+    MOVE_RB   = 5   # 1 0 1   2  -1  right bottom
+    MOVE_LT   = 6   # 1 1 0  -2   1  left top
+    MOVE_LB   = 7   # 1 1 1  -2  -1  left bottom
+
+    # rank can only be at most 8 (there are at most 8 neighbors per cell)
+    RANK_NONE = 8 + 1
+  %>
+
+  // width of the chess board
+  static const int WIDTH = 8;
+
+  // marker which denotes the knight
+  static const float KNIGHT = WIDTH * WIDTH;
+
+
+  float4 self = texRECT(aBoard, iPos);
+
+  int rank = 0;
+  int nextMove = <%= MOVE_NONE %>;
+  float minRank = <%= RANK_NONE %>;
+
+  // iterate through neighboring cells
+    float2 pos;
+    float4 cell;
+    <%
+      itr = [1, 2]
+
+      2.times do |k|
+        2.times do |i|
+          2.times do |j|
+            dx = itr[0] * ((-1) ** i)
+            dy = itr[1] * ((-1) ** j)
+          %>
+            // position of neighboring cell
+            pos = iPos + float2(<%= dx %>, <%= dy %>);
+
+            // ignore out-of-bounds indices because texRECT() will clamp them to the border of the grid
+            if (
+              pos.x >= 0 && pos.x < WIDTH &&
+              pos.y >= 0 && pos.y < WIDTH
+            ){
+              cell = texRECT(aBoard, pos);
+              <%
+                # going from myself to neighbor
+                motionToNeighbor    = (k << 2) | (i << 1)   | j
+
+                # coming to myself from neighbor
+                motionFromNeighbor  = (k << 2) | (1-i << 1) | (1-j)
+              %>
+
+              // calculate Warnsdorff ranking
+                if (cell.r == 0)
+                  rank++;
+
+              // calculate knight's next move
+                if (cell.b < minRank) {
+                  minRank = cell.b;
+                  nextMove = <%= motionToNeighbor %>;
+                }
+
+              // move the knight from neighboring cell onto myself
+                if (cell.r == KNIGHT && cell.a == <%= motionFromNeighbor %>) {
+                  self.g = 1;
+                }
+            }
+          <%
+          end
+        end
+
+        # handle the other hemisphere (top vs. bottom)
+        itr.reverse!
+      end
+    %>
+
+  self.b = rank;
+  self.a = nextMove;
+  return self;
+}

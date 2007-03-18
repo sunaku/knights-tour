@@ -26,7 +26,7 @@ void board_init(const GLuint aWidth, const GLuint aKnightRow, const GLuint aKnig
 
     // set initial position of knight
     // board__data[(aKnightRow * board__width) + (aKnightCol * 4) + 0] = 1;
-    board__data[0] = 1;
+    board__data[0] = board__width * board__width;
 
   // Generate, set up, and bind the texture
     texture_new(&board__texture, board__width, board__width, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA32F_ARB, NULL);
