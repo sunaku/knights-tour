@@ -16,17 +16,21 @@ void board_init(const GLuint aWidth, const GLuint aKnightRow, const GLuint aKnig
       exit(2);
     }
 
-    for (unsigned i = 0; i < board__width*board__width*4; i += 4)
-    {
-      board__data[i+0] = 0; //(rand() >= (RAND_MAX/4) ? 1.0 : 0.0); // set red
-      board__data[i+1] = 0; // set green
-      board__data[i+2] = 0; // set blue
-      board__data[i+3] = 0; // set alpha
-    }
+    unsigned addr = 0;
+    for(unsigned row = 0; row < board__width; row++) {
+      for (unsigned col = 0; col < board__width; col++) {
+        for (unsigned chan = 0; chan < 4; chan++) {
+          board__data[addr] = (
+            // set initial position of knight
+            row == aKnightRow &&
+            col == aKnightCol &&
+            dep == 0
+          );
 
-    // set initial position of knight
-    // board__data[(aKnightRow * board__width) + (aKnightCol * 4) + 0] = 1;
-    board__data[0] = board__width * board__width;
+          addr++;
+        }
+      }
+    }
 
   // Generate, set up, and bind the texture
     texture_new(&board__texture, board__width, board__width, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA32F_ARB, NULL);
@@ -98,11 +102,18 @@ void board_display() {
   board_update();
 
   /*
-  for(unsigned i = 0; i < board__width*board__width*4; ++i)
-    printf("%6d: %30.15f\n", i % 4 ? i : 0, board__data[i]);
-
-  printf("------");
-  exit(0);
+  // dump out the board contents
+    unsigned addr = 0;
+    for(unsigned row = 0; row < board__width; row++) {
+      for (unsigned col = 0; col < board__width; col++) {
+        for (unsigned chan = 0; chan < 4; chan++) {
+          printf("y %u, x %u, channel %d: %30.15f\n", row, col, chan, board__data[addr]);
+          addr++;
+        }
+        printf("\n");
+      }
+    }
+    printf("======\n");
   */
 
   fbo_disable(); // render to screen, not the FBO
