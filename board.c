@@ -20,16 +20,21 @@ void board_init(const GLuint aWidth, const GLuint aKnightRow, const GLuint aKnig
     unsigned addr = 0;
     for(unsigned row = 0; row < board__width; row++) {
       for (unsigned col = 0; col < board__width; col++) {
-        for (unsigned chan = 0; chan < 4; chan++) {
-          board__data[addr] = (
-            // set initial position of knight
-            row == aKnightRow &&
-            col == aKnightCol &&
-            chan == 0 // red channel
-          ) ? board__area : 0;
+        // red channel
+        board__data[addr++] = (
+          // set initial position of knight
+          row == aKnightRow &&
+          col == aKnightCol
+        ) ? board__area : 0;
 
-          addr++;
-        }
+        // green channel
+        board__data[addr++] = 0;
+
+        // blue channel
+        board__data[addr++] = 0;
+
+        // alpha channel
+        board__data[addr++] = 8; // 8 is MOVE_NONE (see naive.cg.erb for details); all cells should have next move = NONE initially, because only the knight makes the "next move" desicison at *runtime*
       }
     }
 

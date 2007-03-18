@@ -50,11 +50,10 @@ float4 main(
     RANK_NONE = 8 + 1 # +1 because we calculate MIN rank
 
     # number of cycles necessary before making a move:
-    # cycle 1: rank computed
-    # cycle 2: minRank & nextMove computed
-    # cycle 3: move is made
+    # cycle 1: knight is born
+    # cycle 2: Warnsdorff rank computed
+    # cycle 3: nextMove computed; knight dies
     EXPORT_DELAY = 3
-    IMPORT_DELAY = EXPORT_DELAY - 1
   %>
 
   // marker which denotes the knight
@@ -109,16 +108,13 @@ float4 main(
 
               // move neighboring knight onto myself
                 if (
-                  self.r == CELL_EMPTY &&
+                  // I haven not been visited
+                  self.r == CELL_EMPTY
 
-                  // neighbor is a knight
-                  cell.r == CELL_KNIGHT &&
+                  &&
 
                   // knight wants to move onto me
-                  cell.a == <%= inward_motion(k, i, j) %> &&
-
-                  // knight is ready to move
-                  cell.g == <%= IMPORT_DELAY %>
+                  cell.a == <%= inward_motion(k, i, j) %>
                 ){
                   self.r = CELL_KNIGHT;
                 }
@@ -138,11 +134,11 @@ float4 main(
 
       // wait for nextMove to converge (since it depends on the rank calculated in previous cycle) before moving onwards to the next cell
       if (self.g == <%= EXPORT_DELAY %>) {
-        self.r = 1;
+        self.a = nextMove;
+        self.r = 1; // knight dies
       }
     }
 
   self.b = rank;
-  self.a = nextMove;
   return self;
 }
