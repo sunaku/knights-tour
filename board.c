@@ -1,5 +1,6 @@
 #include "fbo.c"
 
+#define board__area (board__width * board__width)
 GLuint board__width;
 GLuint board__texture;
 GLuint board__display;
@@ -10,7 +11,7 @@ void board_init(const GLuint aWidth, const GLuint aKnightRow, const GLuint aKnig
   board__width = aWidth;
 
   // generate the board data
-    if((board__data = (float*)malloc(4*board__width*board__width*sizeof(float))) == NULL)
+    if((board__data = (float*)malloc(4*board__area*sizeof(float))) == NULL)
     {
       printf("\n*** out of memory allocating board__data ***\n");
       exit(2);
@@ -24,8 +25,8 @@ void board_init(const GLuint aWidth, const GLuint aKnightRow, const GLuint aKnig
             // set initial position of knight
             row == aKnightRow &&
             col == aKnightCol &&
-            dep == 0
-          );
+            chan == 0 // red channel
+          ) ? board__area : 0;
 
           addr++;
         }

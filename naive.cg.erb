@@ -1,7 +1,7 @@
 // Naive implementation of Knight's Tour.
 //
 //  cell.r = is knight present on this cell?
-//  cell.g = knight's phase counter
+//  cell.g = knight's descision-cycle counter
 //  cell.b = Warnsdorff rank at this cell
 //  cell.a = the next move from this cell
 //
@@ -36,15 +36,32 @@ float4 main(
     MOVE_LT   = 6   # 1 1 0  -2   1  left top
     MOVE_LB   = 7   # 1 1 1  -2  -1  left bottom
 
+    def outward_motion k, i, j
+      (k << 2) | (i << 1) | j
+    end
+
+    def inward_motion k, i, j
+      m = outward_motion(k, i, j)
+      (m & 0b100) | (~m & 0b011)
+    end
+
     # rank can only be at most 8 (there are at most 8 neighbors per cell)
-    RANK_NONE = 8 + 1
+    RANK_NONE = 8 + 1 # +1 because we calculate MIN rank
+
+    # number of cycles necessary before making a move:
+    # cycle 1: rank computed
+    # cycle 2: minRank & nextMove computed
+    # cycle 3: move is made
+    EXPORT_DELAY = 3
+    IMPORT_DELAY = EXPORT_DELAY - 1
   %>
 
   // width of the chess board
   static const int WIDTH = 8;
 
   // marker which denotes the knight
-  static const float KNIGHT = WIDTH * WIDTH;
+  static const int CELL_KNIGHT = WIDTH * WIDTH;
+  static const int CELL_EMPTY = 0;
 
 
   float4 self = texRECT(aBoard, iPos);
@@ -64,6 +81,12 @@ float4 main(
           2.times do |j|
             dx = itr[0] * ((-1) ** i)
             dy = itr[1] * ((-1) ** j)
+
+            # going from myself to neighbor
+            motionToNeighbor    = (k << 2) | (i << 1)   | j
+
+            # coming to myself from neighbor
+            motionFromNeighbor  = (k << 2) | (1-i << 1) | (1-j)
           %>
             // position of neighboring cell
             pos = iPos + float2(<%= dx %>, <%= dy %>);
@@ -74,27 +97,32 @@ float4 main(
               pos.y >= 0 && pos.y < WIDTH
             ){
               cell = texRECT(aBoard, pos);
-              <%
-                # going from myself to neighbor
-                motionToNeighbor    = (k << 2) | (i << 1)   | j
 
-                # coming to myself from neighbor
-                motionFromNeighbor  = (k << 2) | (1-i << 1) | (1-j)
-              %>
-
-              // calculate Warnsdorff ranking
-                if (cell.r == 0)
+              if (cell.r == CELL_EMPTY) {
+                // calculate Warnsdorff ranking
                   rank++;
 
-              // calculate knight's next move
-                if (cell.b < minRank) {
-                  minRank = cell.b;
-                  nextMove = <%= motionToNeighbor %>;
-                }
+                // calculate knight's next move
+                  if (cell.b < minRank) {
+                    minRank = cell.b;
+                    nextMove = <%= outward_motion(k, i, j) %>;
+                  }
+              }
 
-              // move the knight from neighboring cell onto myself
-                if (cell.r == KNIGHT && cell.a == <%= motionFromNeighbor %>) {
-                  self.g = 1;
+              // move neighboring knight onto myself
+                if (
+                  self.r == CELL_EMPTY &&
+
+                  // neighbor is a knight
+                  cell.r == CELL_KNIGHT &&
+
+                  // knight wants to move onto me
+                  cell.a == <%= inward_motion(k, i, j) %> &&
+
+                  // knight is ready to move
+                  cell.g == <%= IMPORT_DELAY %>
+                ){
+                  self.r = CELL_KNIGHT;
                 }
             }
           <%
@@ -105,6 +133,16 @@ float4 main(
         itr.reverse!
       end
     %>
+
+  // move the knight
+    if (self.r == CELL_KNIGHT) {
+      self.g++;
+
+      // wait for nextMove to converge (since it depends on the rank calculated in previous cycle) before moving onwards to the next cell
+      if (self.g == <%= EXPORT_DELAY %>) {
+        self.r = 1;
+      }
+    }
 
   self.b = rank;
   self.a = nextMove;
