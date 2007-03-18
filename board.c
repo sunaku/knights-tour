@@ -2,8 +2,8 @@
 
 #define board__area (board__width * board__width)
 GLuint board__width;
-GLuint board__texture;
-GLuint board__display;
+GLuint board__computeTexture;
+GLuint board__displayTexture;
 GLuint board__gridDisplayList;
 unsigned long board__numCycles;
 float* board__data;
@@ -49,13 +49,13 @@ void board_init(const GLuint aWidth, const GLuint aKnightRow, const GLuint aKnig
     }
 
   // Generate, set up, and bind the texture
-    texture_new(&board__texture, board__width, board__width, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA32F_ARB, NULL);
+    texture_new(&board__computeTexture, board__width, board__width, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA32F_ARB, NULL);
 
     // initialize the FBO
     fbo_init(board__width, board__width);
 
     // Attach the texture to the framebuffer object
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_RECTANGLE_ARB, board__texture, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_RECTANGLE_ARB, board__computeTexture, 0);
 
     // Check the FBO for completeness
     fbo_check();
@@ -90,8 +90,8 @@ void board_init(const GLuint aWidth, const GLuint aKnightRow, const GLuint aKnig
 void board_fini() {
   fbo_fini();
   glDeleteLists(board__gridDisplayList, 1);
-  glDeleteTextures(1, &board__display);
-  glDeleteTextures(1, &board__texture);
+  glDeleteTextures(1, &board__displayTexture);
+  glDeleteTextures(1, &board__computeTexture);
   free(board__data);
 }
 
@@ -109,7 +109,7 @@ void board_render() {
   fbo_disable(); // render to screen, not the FBO
 
   // draw board contents
-    texture_load_array(board__display, GL_TEXTURE_2D, board__width, board__width, board__data);
+    texture_load_array(board__displayTexture, GL_TEXTURE_2D, board__width, board__width, board__data);
     glEnable(GL_TEXTURE_2D);
       board_draw();
     glDisable(GL_TEXTURE_2D);
@@ -126,11 +126,11 @@ void board_update()
   cgGLBindProgram(cg__fragmentProgram);
 
   // transfer data to texture
-    texture_load_array(board__texture, GL_TEXTURE_RECTANGLE_ARB, board__width, board__width, board__data);
+    texture_load_array(board__computeTexture, GL_TEXTURE_RECTANGLE_ARB, board__width, board__width, board__data);
 
   // perform computation
     CGparameter textureCg = cgGetNamedParameter(cg__fragmentProgram, "aBoard");
-    cgGLSetTextureParameter(textureCg, board__texture);
+    cgGLSetTextureParameter(textureCg, board__computeTexture);
     cgGLEnableTextureParameter(textureCg);
 
     CGparameter widthCg = cgGetNamedParameter(cg__fragmentProgram, "aWidth");
