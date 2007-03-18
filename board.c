@@ -65,6 +65,36 @@ void board_draw()
   glEnd();
 }
 
+void board_render() {
+  fbo_disable(); // render to screen, not the FBO
+
+  // draw board contents
+    texture_load_array(board__display, GL_TEXTURE_2D, board__width, board__width, board__data);
+    glEnable(GL_TEXTURE_2D);
+      board_draw();
+    glDisable(GL_TEXTURE_2D);
+
+  // draw board outline (grid)
+    float step = 2.0 / board__width;
+    float cell;
+
+    glBegin(GL_LINES);
+      // draw rows
+      for (cell = -1 + step; cell < board__width; cell += step) {
+        glVertex3f(-1, cell, -1);
+        glVertex3f(1, cell, -1);
+      }
+
+      // draw columns
+      for (cell = -1 + step; cell < board__width; cell += step) {
+        glVertex3f(cell, -1, -1);
+        glVertex3f(cell, 1, -1);
+      }
+    glEnd();
+
+  fbo_enable();
+}
+
 void board_update()
 {
   cgGLEnableProfile(cg__fragmentProfile);
@@ -116,10 +146,5 @@ void board_display() {
     printf("======\n");
   */
 
-  fbo_disable(); // render to screen, not the FBO
-  texture_load_array(board__display, GL_TEXTURE_2D, board__width, board__width, board__data);
-  glEnable(GL_TEXTURE_2D);
-    board_draw();
-  glDisable(GL_TEXTURE_2D);
-  fbo_enable();
+  board_render();
 }
