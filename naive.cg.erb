@@ -6,7 +6,8 @@
 //  cell.a = the next move from this cell
 //
 float4 main(
-  uniform samplerRECT aBoard,
+  const uniform samplerRECT aBoard,
+  const uniform int aWidth,
   float2 iPos: WPOS
 ) : COLOR
 {
@@ -56,11 +57,8 @@ float4 main(
     IMPORT_DELAY = EXPORT_DELAY - 1
   %>
 
-  // width of the chess board
-  static const int WIDTH = 8;
-
   // marker which denotes the knight
-  static const int CELL_KNIGHT = WIDTH * WIDTH;
+  static const int CELL_KNIGHT = aWidth * aWidth;
   static const int CELL_EMPTY = 0;
 
 
@@ -93,8 +91,8 @@ float4 main(
 
             // ignore out-of-bounds indices because texRECT() will clamp them to the border of the grid
             if (
-              pos.x >= 0 && pos.x < WIDTH &&
-              pos.y >= 0 && pos.y < WIDTH
+              pos.x >= 0 && pos.x < aWidth &&
+              pos.y >= 0 && pos.y < aWidth
             ){
               cell = texRECT(aBoard, pos);
 

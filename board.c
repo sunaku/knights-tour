@@ -109,6 +109,9 @@ void board_update()
     cgGLSetTextureParameter(textureCg, board__texture);
     cgGLEnableTextureParameter(textureCg);
 
+    CGparameter widthCg = cgGetNamedParameter(cg__fragmentProgram, "aWidth");
+    cgSetParameter1f(widthCg, board__width);
+
     board_draw(); // GPGPU CONCEPT 4: Viewport-Sized Quad = Data Stream Generator.
 
     cgGLDisableTextureParameter(textureCg);
