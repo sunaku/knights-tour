@@ -4,11 +4,20 @@
 GLuint board__width;
 GLuint board__texture;
 GLuint board__display;
+unsigned long board__numCycles;
 float* board__data;
 
 void board_init(const GLuint aWidth, const GLuint aKnightRow, const GLuint aKnightCol)
 {
   board__width = aWidth;
+
+  // number of cycles it takes to finish the computation:
+  //
+  //   (3 cycles per knight) * (number of knights) - 1
+  //
+  // the -1 is because the initial knight is not determined
+  // at runtime, so we save one cycle of processing.
+  board__numCycles = (3 * board__area) - 1;
 
   // generate the board data
     if((board__data = (float*)malloc(4*board__area*sizeof(float))) == NULL)
@@ -139,6 +148,22 @@ void board_update()
 
 void board_display() {
   board_update();
+
+
+  // check for algorithm completion
+    static unsigned long cycle = 0;
+    cycle++;
+
+    if (cycle >= board__numCycles) {
+      printf("\nIt has been %lu cycles since we started.", cycle);
+      printf("\nThe computation should now be finished.");
+
+      printf("\n\nPress the ENTER key to continue.");
+      fflush(stdin);
+      getchar();
+
+      exit(EXIT_SUCCESS);
+    }
 
   /*
   // dump out the board contents
