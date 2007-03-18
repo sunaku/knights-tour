@@ -4,6 +4,7 @@
 GLuint board__width;
 GLuint board__texture;
 GLuint board__display;
+GLuint board__gridDisplayList;
 unsigned long board__numCycles;
 float* board__data;
 
@@ -60,11 +61,35 @@ void board_init(const GLuint aWidth, const GLuint aKnightRow, const GLuint aKnig
     fbo_check();
 
   // generate texture for board display
-    texture_new(&board__display, board__width, board__width, GL_TEXTURE_2D, GL_RGBA, NULL);
+    texture_new(&board__displayTexture, board__width, board__width, GL_TEXTURE_2D, GL_RGBA, NULL);
+
+  // generate OpenGL display lists to speed up rendering
+    board__gridDisplayList = glGenLists(1);
+
+    glNewList(board__gridDisplayList, GL_COMPILE);
+      // draw board outline (grid)
+      float step = 2.0 / board__width;
+      float cell;
+
+      glBegin(GL_LINES);
+        // draw rows
+        for (cell = -1 + step; cell < board__width; cell += step) {
+          glVertex3f(-1, cell, -1);
+          glVertex3f(1, cell, -1);
+        }
+
+        // draw columns
+        for (cell = -1 + step; cell < board__width; cell += step) {
+          glVertex3f(cell, -1, -1);
+          glVertex3f(cell, 1, -1);
+        }
+      glEnd();
+    glEndList();
 }
 
 void board_fini() {
   fbo_fini();
+  glDeleteLists(board__gridDisplayList, 1);
   glDeleteTextures(1, &board__display);
   glDeleteTextures(1, &board__texture);
   free(board__data);
@@ -90,22 +115,7 @@ void board_render() {
     glDisable(GL_TEXTURE_2D);
 
   // draw board outline (grid)
-    float step = 2.0 / board__width;
-    float cell;
-
-    glBegin(GL_LINES);
-      // draw rows
-      for (cell = -1 + step; cell < board__width; cell += step) {
-        glVertex3f(-1, cell, -1);
-        glVertex3f(1, cell, -1);
-      }
-
-      // draw columns
-      for (cell = -1 + step; cell < board__width; cell += step) {
-        glVertex3f(cell, -1, -1);
-        glVertex3f(cell, 1, -1);
-      }
-    glEnd();
+    glCallList(board__gridDisplayList);
 
   fbo_enable();
 }
