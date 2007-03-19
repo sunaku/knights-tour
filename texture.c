@@ -1,3 +1,7 @@
+// CMPE-220, Winter 2007, final project
+// Knight's Tour in Cg
+// Suraj Kurapati
+
 void texture_new(GLuint* aTexId, const GLuint aTexWidth, const GLuint aTexHeight, const GLenum aTexType, const int aTexFormat, const float* const aTexData) {
   // generate texture
   glGenTextures(1, aTexId);

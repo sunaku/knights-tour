@@ -1,8 +1,6 @@
-// Suraj Kurapati
-// CATS id: skurapat
-//
 // CMPE-220, Winter 2007, final project
 // Knight's Tour in Cg
+// Suraj Kurapati
 
 #include <stdio.h>
 #include <stdlib.h>

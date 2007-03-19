@@ -1,3 +1,7 @@
+// CMPE-220, Winter 2007, final project
+// Knight's Tour in Cg
+// Suraj Kurapati
+
 #include "fbo.c"
 
 #define board__area (board__width * board__width)

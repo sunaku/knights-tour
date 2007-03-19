@@ -1,3 +1,7 @@
+// CMPE-220, Winter 2007, final project
+// Knight's Tour in Cg
+// Suraj Kurapati
+
 #include <GL/glut.h>
 
 // GPGPU concept 3b: Use orthographic projection.
