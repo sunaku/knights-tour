@@ -18,11 +18,14 @@ void board_init(const GLuint aWidth, const GLuint aKnightRow, const GLuint aKnig
 
   // number of cycles it takes to finish the computation:
   //
-  //   (3 cycles per knight) * (number of knights) - 1
+  //   (3 cycles per knight) * (number of knights)
   //
   // the -1 is because the initial knight is not determined
   // at runtime, so we save one cycle of processing.
-  board__numCycles = (3 * board__area) - 1;
+  //
+  // see EXPORT_DELAY in the "naive.cg.erb" file for details.
+  //
+  board__numCycles = 3 * board__area;
   printf("\nThe tour should take %lu cycles to complete.\n", board__numCycles);
 
   // generate the board data
