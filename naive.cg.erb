@@ -2,13 +2,18 @@
 // Knight's Tour in Cg
 // Suraj Kurapati
 
-// Naive implementation of Knight's Tour.
-//
-//  cell.r = is knight present on this cell?
-//  cell.g = knight's descision-cycle counter
-//  cell.b = Warnsdorff rank at this cell
-//  cell.a = the next move from this cell
-//
+/***************************************************************************
+  NOTICE: This file was automatically generated from: <%= __FILE__ %>
+***************************************************************************
+
+  Naive implementation of Knight's Tour with Warnsdorff's Rule heuristic.
+
+  cell.r = is knight present on this cell?
+  cell.g = knight's descision-cycle counter
+  cell.b = Warnsdorff rank at this cell
+  cell.a = the next move from this cell
+
+****************************************************************************/
 float4 main(
   const uniform samplerRECT aBoard,
   const uniform int aWidth,
@@ -61,6 +66,22 @@ float4 main(
 
     # an unvisited cell
     EMPTY_CELL = 0
+
+    def knight? var
+      "(#{var}.r != #{EMPTY_CELL})"
+    end
+
+    def empty? var
+      "(#{var}.r == #{EMPTY_CELL})"
+    end
+
+    def unmoved? var
+      "(#{var}.a == #{MOVE_NONE})"
+    end
+
+    def incoming? var, *args
+      "(#{var}.a == #{inward_motion(*args)})"
+    end
   %>
 
   float4 self = texRECT(aBoard, iPos);
@@ -70,83 +91,63 @@ float4 main(
   float minRank = <%= RANK_NONE %>;
 
   // iterate through neighboring cells
-    float2 pos;
-    float4 cell;
-    <%
-      itr = [1, 2]
+  float2 pos;
+  float4 neighbor;
+  <%
+    itr = [1, 2]
 
-      2.times do |k|
-        2.times do |i|
-          2.times do |j|
-            dx = itr[0] * ((-1) ** i)
-            dy = itr[1] * ((-1) ** j)
+    2.times do |k|
+      2.times do |i|
+        2.times do |j|
+          dx = itr[0] * ((-1) ** i)
+          dy = itr[1] * ((-1) ** j)
+        %>
+          // position of neighboring cell
+          pos = iPos + float2(<%= dx %>, <%= dy %>);
 
-            # going from myself to neighbor
-            motionToNeighbor    = (k << 2) | (i << 1)   | j
+          // ignore out-of-bounds indices because texRECT()
+          // will clamp them to the border of the grid
+          if (
+            pos.x >= 0 && pos.x < aWidth &&
+            pos.y >= 0 && pos.y < aWidth
+          ){
+            neighbor = texRECT(aBoard, pos);
 
-            # coming to myself from neighbor
-            motionFromNeighbor  = (k << 2) | (1-i << 1) | (1-j)
-          %>
-            // position of neighboring cell
-            pos = iPos + float2(<%= dx %>, <%= dy %>);
+            if (<%= empty? :neighbor %>) {
+              // calculate Warnsdorff ranking
+              rank++;
 
-            // ignore out-of-bounds indices because texRECT() will clamp them to the border of the grid
-            if (
-              pos.x >= 0 && pos.x < aWidth &&
-              pos.y >= 0 && pos.y < aWidth
-            ){
-              cell = texRECT(aBoard, pos);
-
-              if (cell.r == <%= EMPTY_CELL %>) {
-                // calculate Warnsdorff ranking
-                  rank++;
-
-                // calculate knight's next move
-                  if (cell.b < minRank) {
-                    minRank = cell.b;
-                    nextMove = <%= outward_motion(k, i, j) %>;
-                  }
+              // calculate knight's next move
+              if (neighbor.b < minRank) {
+                minRank = neighbor.b;
+                nextMove = <%= outward_motion k, i, j %>;
               }
-
-              // move neighboring knight onto myself
-                if (
-                  // I have not been visited
-                  self.r == <%= EMPTY_CELL %>
-
-                  &&
-
-                  // knight wants to move onto me
-                  cell.a == <%= inward_motion(k, i, j) %>
-                ){
-                  self.r = cell.r + 1;
-                }
             }
-          <%
-          end
+            else {
+              // import neighboring knight onto myself
+              if (<%= empty? :self %> && <%= incoming? :neighbor, k, i, j %>) {
+                self.r = neighbor.r + 1;
+              }
+            }
+          }
+        <%
         end
-
-        # handle the other hemisphere (top vs. bottom)
-        itr.reverse!
       end
-    %>
 
-  // make the descision to move the knight
-    if (
-      // I am a knight
-      self.r != <%= EMPTY_CELL %>
+      # handle the other axis (vertical vs. horizontal)
+      itr.reverse!
+    end
+  %>
 
-      &&
+  // make the descision to export the knight to a neighboring cell
+  if (<%= knight? :self %> && <%= unmoved? :self %>) {
+    self.g++;
 
-      // I have not yet made a move
-      self.a == <%= MOVE_NONE %>
-    ){
-      self.g++;
-
-      // wait for nextMove to converge (since it depends on the rank calculated in previous cycle) before moving onwards to the next cell
-      if (self.g == <%= EXPORT_DELAY %>) {
-        self.a = nextMove;
-      }
+    // wait for nextMove to converge (since it depends on the rank calculated in previous cycle) before moving onwards to the next cell
+    if (self.g == <%= EXPORT_DELAY %>) {
+      self.a = nextMove;
     }
+  }
 
   self.b = rank;
   return self;
