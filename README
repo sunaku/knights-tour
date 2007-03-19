@@ -3,3 +3,6 @@
 // Suraj Kurapati
 
 Run the "make.bat" script on the windoze lab computers.
+
+NOTE:   You might have to adjust the PATH variables at the 
+        top of the "make.bat" script to get things working.
