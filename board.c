@@ -35,7 +35,7 @@ void board_init(const GLuint aWidth, const GLuint aKnightRow, const GLuint aKnig
           // set initial position of knight
           row == aKnightRow &&
           col == aKnightCol
-        ) ? board__area : 0;
+        ) ? 1 : 0;
 
         // green channel
         board__data[addr++] = 0;

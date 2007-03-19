@@ -54,12 +54,10 @@ float4 main(
     # cycle 2: Warnsdorff rank computed
     # cycle 3: nextMove computed; knight dies
     EXPORT_DELAY = 3
+
+    # an unvisited cell
+    EMPTY_CELL = 0
   %>
-
-  // marker which denotes the knight
-  static const int CELL_KNIGHT = aWidth * aWidth;
-  static const int CELL_EMPTY = 0;
-
 
   float4 self = texRECT(aBoard, iPos);
 
@@ -95,7 +93,7 @@ float4 main(
             ){
               cell = texRECT(aBoard, pos);
 
-              if (cell.r == CELL_EMPTY) {
+              if (cell.r == <%= EMPTY_CELL %>) {
                 // calculate Warnsdorff ranking
                   rank++;
 
@@ -108,15 +106,15 @@ float4 main(
 
               // move neighboring knight onto myself
                 if (
-                  // I haven not been visited
-                  self.r == CELL_EMPTY
+                  // I have not been visited
+                  self.r == <%= EMPTY_CELL %>
 
                   &&
 
                   // knight wants to move onto me
                   cell.a == <%= inward_motion(k, i, j) %>
                 ){
-                  self.r = CELL_KNIGHT;
+                  self.r = cell.r + 1;
                 }
             }
           <%
@@ -128,14 +126,21 @@ float4 main(
       end
     %>
 
-  // move the knight
-    if (self.r == CELL_KNIGHT) {
+  // make the descision to move the knight
+    if (
+      // I am a knight
+      self.r != <%= EMPTY_CELL %>
+
+      &&
+
+      // I have not yet made a move
+      self.a == <%= MOVE_NONE %>
+    ){
       self.g++;
 
       // wait for nextMove to converge (since it depends on the rank calculated in previous cycle) before moving onwards to the next cell
       if (self.g == <%= EXPORT_DELAY %>) {
         self.a = nextMove;
-        self.r = 1; // knight dies
       }
     }
 
