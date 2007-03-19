@@ -27,7 +27,7 @@ void glew_init() {
   int i;
   glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS_EXT, &i);
   if (i < 1) {
-    fprintf(stderr, "Error: GL_MAX_COLOR_ATTACHMENTS_EXT is %d. Need at least 1.\n");
+    fprintf(stderr, "Error: GL_MAX_COLOR_ATTACHMENTS_EXT is %d. Need at least 1.\n", i);
     exit(EXIT_FAILURE);
   }
 }

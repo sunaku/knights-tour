@@ -36,7 +36,6 @@ void fbo_check() {
   switch(glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT))
   {
     case GL_FRAMEBUFFER_COMPLETE_EXT:
-      printf("Framebuffer ok\n");
       break;
 
     case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT:

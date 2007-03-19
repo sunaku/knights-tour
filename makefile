@@ -8,15 +8,18 @@ CG_LIB=$(CG_DIR)/usr/lib
 CG_FLG=-I$(CG_INC) -L$(CG_LIB) -lCg -lCgGL
 GL_FLG=-IGL -lglut -lGLEW
 
-CFLAGS=-Wall -g $(GL_FLG) $(CG_FLG)
+CFLAGS=-Wall -g -std=c99 $(GL_FLG) $(CG_FLG)
 
 all: run
 
-build: main.c
-	cc $(CFLAGS) $^ -o $@
+naive.cg: naive.cg.erb
+	erb1.8 $< > $@
+
+build: main.c naive.cg
+	cc $(CFLAGS) $< -o $@
 
 run: build
 	$<
 
 clean:
-	rm -f build
+	rm -f build naive.cg
