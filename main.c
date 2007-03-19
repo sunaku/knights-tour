@@ -12,8 +12,6 @@
 #include "texture.c"
 #include "board.c"
 
-#define SIZE 8
-
 void main_display(void)
 {
   board_display();
@@ -29,8 +27,26 @@ int main(int argc, char **argv)
     cg_init();
     cg_register_fragment_program("naive.cg", "main");
 
+  // ask for parameters
+    printf(
+      "\n// CMPE-220, Winter 2007, final project"
+      "\n// Knight's Tour in Cg"
+      "\n// Suraj Kurapati"
+      "\n\n"
+    );
+
+    unsigned width, row, col;
+    printf("chess board's width?      "); scanf("%u", &width);
+    printf("knight's starting row?    "); scanf("%u", &row);
+    printf("knight's starting column? "); scanf("%u", &col);
+
+    if (row >= width || col >= width) {
+      printf("Error: row and column must be in range [0, %u).", width);
+      exit(EXIT_FAILURE);
+    }
+
   // run algorithm
-    board_init(SIZE, 0, 0);
+    board_init(width, row, col);
     glutDisplayFunc(main_display);
     glutMainLoop();
 
