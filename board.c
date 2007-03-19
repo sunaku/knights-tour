@@ -19,6 +19,7 @@ void board_init(const GLuint aWidth, const GLuint aKnightRow, const GLuint aKnig
   // the -1 is because the initial knight is not determined
   // at runtime, so we save one cycle of processing.
   board__numCycles = (3 * board__area) - 1;
+  printf("\nThe tour should take %lu cycles to complete.\n", board__numCycles);
 
   // generate the board data
     if((board__data = (float*)malloc(4*board__area*sizeof(float))) == NULL)
@@ -158,37 +159,51 @@ void board_update()
 
 void board_display() {
   board_update();
+  board_render();
 
+  // handle algorithm completion
+  static unsigned long cycle = 0;
+  cycle++;
 
-  // check for algorithm completion
-    static unsigned long cycle = 0;
-    cycle++;
+  if (cycle >= board__numCycles) {
+    printf("\nThe tour should now be complete.");
 
-    if (cycle >= board__numCycles) {
-      printf("\nIt has been %lu cycles since we started.", cycle);
-      printf("\nThe computation should now be finished.");
+    #ifdef WIN32
+    printf("\n\nPress the ENTER key to continue.");
+    fflush(stdin);
+    int c = getchar();
+    #endif
 
-      printf("\n\nPress the ENTER key to continue.");
-      fflush(stdin);
-      getchar();
+    printf("\nThe Knight toured in this order:\n");
 
+    // dump out the board contents
+      unsigned long numSkipped = 0;
+
+      unsigned addr = 0;
+      for(unsigned row = 0; row < board__width; row++) {
+        printf("\n");
+
+        for (unsigned col = 0; col < board__width; col++) {
+          float step = board__data[addr];
+          addr += 4;
+
+          if (step == 0) {
+            numSkipped++;
+            printf(" %3c", '#');
+          }
+          else {
+            printf(" %3.f", step);
+          }
+        }
+      }
+      printf("\n");
+
+    if (numSkipped > 0) {
+      printf("\nThe Knight failed to visit %lu cells.\n", numSkipped);
+      exit(EXIT_FAILURE);
+    }
+    else {
       exit(EXIT_SUCCESS);
     }
-
-  /*
-  // dump out the board contents
-    unsigned addr = 0;
-    for(unsigned row = 0; row < board__width; row++) {
-      for (unsigned col = 0; col < board__width; col++) {
-        for (unsigned chan = 0; chan < 4; chan++) {
-          printf("y %u, x %u, channel %d: %30.15f\n", row, col, chan, board__data[addr]);
-          addr++;
-        }
-        printf("\n");
-      }
-    }
-    printf("======\n");
-  */
-
-  board_render();
+  }
 }
