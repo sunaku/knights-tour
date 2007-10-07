@@ -22,8 +22,10 @@ void cg_register_fragment_program(const char* const aFileName, const char* const
     NULL
   );
 
-  if(cg__fragmentProgram != NULL)
+  if(cg__fragmentProgram != NULL) {
     cgGLLoadProgram(cg__fragmentProgram);
+    cgGLBindProgram(cg__fragmentProgram);
+  }
 }
 
 void cg_catch_error(void)
